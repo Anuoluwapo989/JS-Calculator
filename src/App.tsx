@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { evaluate } from 'mathjs';
 import './App.css';
 
@@ -8,30 +8,28 @@ type OperatorType = '/' | '*' | '-' | '+' | '=' | null;
 function App() {
   const [display, setDisplay] = useState<string>("0");
   const [result, setResult] = useState<boolean>(false);
-  // State to track which operator button should be visually 'active'
   const [activeOperator, setActiveOperator] = useState<OperatorType>(null);
-  const displayRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    displayRef.current?.focus();
-  }, []);
-
+  // Helper function to check if a symbol is an operator
   const isOperator = (symbol: string) => /[*/+-]/.test(symbol);
 
-  const calculate = () => {
+  // NOTE: We wrap calculate in useCallback so it can be used in the useEffect below
+  const calculate = useCallback(() => {
     try {
+      // Evaluate the math expression
       const evaluated = evaluate(display.trim());
       setDisplay(String(evaluated));
       setResult(true);
-      setActiveOperator(null); // Calculation finished, clear active operator highlight
+      setActiveOperator(null);
     } catch (error) {
       setDisplay("Error");
       setResult(true);
       setActiveOperator(null);
     }
-  };
+  }, [display]);
 
-  const buttonPress = (symbol: string) => {
+  // NOTE: We wrap buttonPress in useCallback to avoid stale state in event listeners
+  const buttonPress = useCallback((symbol: string) => {
     if (symbol === "clear") {
       setDisplay("0");
       setResult(false);
@@ -43,16 +41,13 @@ function App() {
     else if (isOperator(symbol)) {
       setResult(false);
       const lastChar = display.trim().slice(-1);
-      let newDisplay = display;
-
+      
       // If user clicks a different operator, swap it
       if (isOperator(lastChar)) {
-        newDisplay = display.trim().slice(0, -1).trim() + " " + symbol + " ";
+        setDisplay(prev => prev.trim().slice(0, -1).trim() + " " + symbol + " ");
       } else {
-        newDisplay = display + " " + symbol + " ";
+        setDisplay(prev => prev + " " + symbol + " ");
       }
-
-      setDisplay(newDisplay);
       setActiveOperator(symbol as OperatorType);
     }
     else {
@@ -61,61 +56,63 @@ function App() {
         setDisplay(symbol);
         setResult(false);
       } else {
-        // APPEND the number even if an operator is active 
-        // so the full expression stays in the background
         setDisplay((prev) => prev + symbol);
       }
-
       // Typing a number turns off the visual highlight
       setActiveOperator(null);
     }
-    setTimeout(() => displayRef.current?.focus(), 0);
-  };
+  }, [display, result, calculate]);
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    const allowed = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'];
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      calculate();
-      setActiveOperator(null); // Clear highlight when Enter is pressed (triggers calculate anyway)
-    } else if (e.key === 'Escape') {
-      e.preventDefault();
-      buttonPress("clear");
-    } else if (/^[0-9.+\-*/]$/.test(e.key)) {
-      e.preventDefault();
-      buttonPress(e.key);
-    } else if (!allowed.includes(e.key)) {
-      e.preventDefault();
-    }
-  };
+  // GLOBAL KEYBOARD LISTENER
+  // We attach this to the window instead of the div. 
+  // This allows desktop typing without needing to "focus" the display.
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const allowed = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'Tab'];
+      
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        calculate();
+        setActiveOperator(null);
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        buttonPress("clear");
+      } else if (/^[0-9.+\-*/]$/.test(e.key)) {
+        e.preventDefault();
+        buttonPress(e.key);
+      } else if (!allowed.includes(e.key)) {
+        // Optional: prevent default only if you want to block other keys
+        // e.preventDefault(); 
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    // Cleanup listener on unmount or re-render
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [buttonPress, calculate]); // Dependencies ensure the listener always has latest state
 
   // Helper function to check if a specific button is the currently active one
   const isButtonActive = (symbol: string) => activeOperator === symbol;
+
+  // Logic to show only current number (mimicking iOS calculator)
+  const formatDisplay = () => {
+    return display.split(/[*/+-]/).filter(x => x.trim() !== "").pop()?.trim() || "0";
+  };
 
   return (
     <div className="container">
       <h1>Calculator Web App</h1>
       <div id="calculator">
         <div id="display">
-          <div
-            id="answer"
-            ref={displayRef}
-            contentEditable="plaintext-only"
-            suppressContentEditableWarning={true}
-            onKeyDown={handleKeyDown}
-            tabIndex={0}
-            // This logic extracts ONLY the numerical parts and shows the last one typed.
-            // It effectively hides the operator symbols from the screen.
-            dangerouslySetInnerHTML={{
-              __html: display.split(/[*/+-]/).filter(x => x.trim() !== "").pop()?.trim() || "0"
-            }}
-          />
-
-
-
+          {/* Changed from contentEditable to a standard div */}
+          <div id="answer">
+            {formatDisplay()}
+          </div>
         </div>
 
-        {/* Use the isButtonActive helper to apply a dynamic class name */}
         <button id="clear" onClick={() => buttonPress("clear")} className="light-gray">C</button>
         <button id="negative" onClick={() => buttonPress("negative")} className="light-gray">+/-</button>
         <button id="percentage" onClick={() => buttonPress("percent")} className="light-gray">%</button>
