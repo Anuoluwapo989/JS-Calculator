@@ -37,7 +37,7 @@
 
 #calculator {
   /* Using rem for border-radius so it scales with font size */
-  border-radius: 6rem; 
+  border-radius: 4rem; 
   display: grid;
   grid-template-areas:
     "display display display display"
@@ -93,7 +93,7 @@ button {
   font-weight: 250;
   border: none;
   cursor: pointer;
-  border-radius: 50%; /* Perfect circles */
+  border-radius: 100%; /* Perfect circles */
   width: 100%;
   transition: transform 0.1s ease-in-out;
   font-family: 'Inter', sans-serif;
