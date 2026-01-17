@@ -89,7 +89,7 @@
 button {
   /* Aspect-ratio keeps buttons circular if width/height are handled by grid */
   aspect-ratio: 1 / 1; 
-  font-size: 2.5rem;
+  font-size: 2.5em;
   font-weight: 250;
   border: none;
   cursor: pointer;
