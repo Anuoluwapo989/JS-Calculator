@@ -134,7 +134,7 @@ function App() {
         <button id="add" onClick={() => buttonPress("+")} className={`yellow ${isButtonActive('+') ? 'active-operator' : ''}`}>+</button>
 
         <button id="calc" onClick={() => buttonPress("calc")} className="dark-gray">
-          <img id = "calc-icon" src="src\assets\calculator.png" alt="This is a calculator"></img>
+          <span className="material-symbols-outlined">calculate</span>
         </button>
         <button id="zero" onClick={() => buttonPress("0")} className="dark-gray">0</button>
         <button id="decimal" onClick={() => buttonPress(".")} className="dark-gray">.</button>
