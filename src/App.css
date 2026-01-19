@@ -26,6 +26,16 @@
   --yellow: #ff9f0b;
 }
 
+/* App.css */
+#display {
+  display: flex;
+  flex-direction: column; /* Stack text vertically */
+  align-items: flex-end;    /* Push text to the right */
+  justify-content: center;
+  padding: 10px 20px;
+  line-height: 1.2;
+}
+
 .container {
   display: flex;
   flex-direction: column;
@@ -59,6 +69,19 @@
   filter: drop-shadow(0px 4px 6px rgba(0, 0, 0, 0.2));
 }
 
+.expression-text {
+  font-size: 1.5rem;
+  color: #888; 
+  min-height: 30px; /* Keeps the space even if empty */
+}
+
+/* The main answer text (Big & White) */
+.result-text {
+  font-size: 3rem;
+  color: white;
+  font-weight: bold;
+}
+
 #answer {
   grid-area: display;
   font-family: 'Inter', sans-serif;
@@ -81,9 +104,12 @@
 }
 
 #display {
-  grid-area: display;
   display: flex;
-  justify-content: flex-end;
+  flex-direction: column; /* Stack text vertically */
+  align-items: flex-end;    /* Push text to the right */
+  justify-content: center;
+  padding: 10px 20px;
+  line-height: 1.2;
 }
 
 button {
