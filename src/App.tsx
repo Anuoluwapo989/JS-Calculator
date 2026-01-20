@@ -15,10 +15,12 @@ function App() {
   const [hasCalculated, setHasCalculated] = useState<boolean>(false);
   const [lastCalcWasSimple, setLastCalcWasSimple] = useState<boolean>(false);
   
-  // NEW: Reference to the display text element for auto-scrolling
   const displayRef = useRef<HTMLDivElement>(null);
 
   const isOperator = (symbol: string) => /[*/+-]/.test(symbol);
+  
+  // Helper to detect simple numbers (only digits, dots, and optional negative)
+  // Note: "50%" will return FALSE, which is good (it will be saved to history).
   const isSimpleNumber = (str: string) => /^-?\d*\.?\d*$/.test(str);
 
   const buttonPress = useCallback((symbol: string) => {
@@ -33,11 +35,15 @@ function App() {
       if (!expression) return;
       
       try {
+        // 1. Calculate
+        // mathjs handles "50%" automatically as 0.5
         const finalResult = evaluate(expression); 
         
+        // 2. Check if simple
         const isSimple = isSimpleNumber(expression);
         setLastCalcWasSimple(isSimple);
 
+        // 3. History: Save if NOT simple (e.g. "50 + 5" or "50%")
         if (!isSimple) {
             const historyItem = `${expression} = ${finalResult}`;
             setHistory(prev => [historyItem, ...prev]);
@@ -55,14 +61,15 @@ function App() {
     else if (symbol === "history") {
         setShowHistory(!showHistory);
     }
+    // --- UPDATED PERCENT LOGIC ---
     else if (symbol === "percent") {
-      try {
-        const percentValue = evaluate(expression + " / 100");
-        setExpression(String(percentValue));
-      } catch (error) {
-        setResult("Error");
-      }
+      // Prevent adding % if empty or if the last char is already a % or operator
+      if (expression === "" || isOperator(expression.slice(-1)) || expression.slice(-1) === "%") return;
+      
+      // Just append the % symbol to the screen
+      setExpression(prev => prev + "%");
     }
+    // -----------------------------
     else if (symbol === "calc") {
       if (!expression) return;
       try {
@@ -104,6 +111,7 @@ function App() {
       setActiveOperator(symbol as OperatorType);
     }
     else {
+      // NUMBER LOGIC
       if (hasCalculated) {
         setExpression(symbol);
         setHasCalculated(false);
@@ -119,6 +127,7 @@ function App() {
              const currentSegment = segments[segments.length - 1];
              if (currentSegment === "0") return;
         }
+
         setExpression(prev => prev + symbol);
       }
       setActiveOperator(null);
@@ -132,7 +141,10 @@ function App() {
       else if (e.key === 'Escape') { e.preventDefault(); buttonPress("clear"); }
       else if (e.key === 'Backspace') {
         setExpression(prev => prev.slice(0, -1));
-      } else if (/^[0-9.+\-*/]$/.test(e.key)) {
+      } 
+      // Added '%' to the regex to support keyboard input (Shift + 5)
+      else if (e.key === '%') { e.preventDefault(); buttonPress("percent"); }
+      else if (/^[0-9.+\-*/]$/.test(e.key)) {
         e.preventDefault();
         buttonPress(e.key);
       }
@@ -141,11 +153,9 @@ function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [buttonPress]);
 
-  // NEW: Auto-scroll Logic
-  // This runs every time 'expression' changes.
+  // Auto-scroll Logic
   useEffect(() => {
     if (displayRef.current) {
-      // Set the scroll position to the maximum width (all the way to the right)
       displayRef.current.scrollLeft = displayRef.current.scrollWidth;
     }
   }, [expression]);
@@ -163,7 +173,6 @@ function App() {
               : '\u00A0'}
           </div>
           
-          {/* Attached ref={displayRef} here */}
           <div id="display" className="result-text" ref={displayRef}>
             {expression || "0"}
           </div>
@@ -193,6 +202,7 @@ function App() {
         {/* BUTTONS */}
         <button id="clear" onClick={() => buttonPress("clear")} className="light-gray">C</button>
         <button id="negative" onClick={() => buttonPress("negative")} className="light-gray">+/-</button>
+        {/* Update: Pass "percent" string to buttonPress */}
         <button id="percentage" onClick={() => buttonPress("percent")} className="light-gray">%</button>
         <button id="divide" onClick={() => buttonPress("/")} className={`yellow ${activeOperator === '/' ? 'active-operator' : ''}`}>/</button>
 
