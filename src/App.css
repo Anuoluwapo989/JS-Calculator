@@ -1,24 +1,24 @@
 /* Add this new class at the bottom of your CSS file */
 .active-operator {
-  background-color: var(--white) !important; 
-  color: var(--yellow) !important;           
+  background-color: var(--white) !important;
+  color: var(--yellow) !important;
 }
 
 /* Make sure basic yellow buttons have white text initially */
 .yellow {
   background-color: var(--yellow);
-  color: white; 
+  color: white;
 }
 
 /* Ensure light-gray text is black for visibility */
 .light-gray {
-    background-color: var(--light-gray);
-    color: black;
+  background-color: var(--light-gray);
+  color: black;
 }
 
 :root {
   /* Using clamp to ensure padding isn't too huge on small screens */
-  padding: clamp(1rem, 5vw, 200px); 
+  padding: clamp(1rem, 5vw, 200px);
   --white: white;
   --light-gray: #a6a6a6;
   --dark-gray: #333333;
@@ -29,8 +29,10 @@
 /* App.css */
 #display {
   display: flex;
-  flex-direction: column; /* Stack text vertically */
-  align-items: flex-end;    /* Push text to the right */
+  flex-direction: column;
+  /* Stack text vertically */
+  align-items: flex-end;
+  /* Push text to the right */
   justify-content: center;
   padding: 10px 20px;
   line-height: 1.2;
@@ -47,7 +49,7 @@
 
 #calculator {
   /* Using rem for border-radius so it scales with font size */
-  border-radius: 4rem; 
+  border-radius: 4rem;
   display: grid;
   grid-template-areas:
     "display display display display"
@@ -56,10 +58,11 @@
     "four five six subtract"
     "one two three add"
     "calc zero decimal equals";
-  
+
   /* Use minmax to allow buttons to shrink on small screens */
   grid-template-columns: repeat(4, minmax(60px, 1fr));
-  max-width: 400px; /* Limits the size on large desktops */
+  max-width: 400px;
+  /* Limits the size on large desktops */
   width: 100%;
   gap: 0.4rem;
   padding: 1rem;
@@ -71,8 +74,22 @@
 
 .expression-text {
   font-size: 1.5rem;
-  color: #888; 
-  min-height: 30px; /* Keeps the space even if empty */
+  color: var(--light-gray);
+  grid-area: display;
+  font-family: 'Inter', sans-serif;
+  text-align: right;
+  width: 80%;
+
+  /* Prevent line breaks */
+  white-space: nowrap;
+  overflow-x: auto;
+  overflow-y: hidden;
+  outline: none;
+  caret-color: transparent;
+}
+
+.expression-text::-webkit-scrollbar, .result-text::-webkit-scrollbar {
+  display: none;
 }
 
 /* The main answer text (Big & White) */
@@ -80,33 +97,34 @@
   font-size: 3rem;
   color: white;
   font-weight: bold;
-}
-
-#answer {
   grid-area: display;
   font-family: 'Inter', sans-serif;
-  font-weight: 300;
-  /* Scalable font size */
-  font-size: clamp(2rem, 10vw, 4rem); 
+  font-size: clamp(2rem, 10vw, 4rem);
   text-align: right;
   color: var(--white);
-  width: 100%; /* Changed from 420px for responsiveness */
+  width: 100%;
+  
+  /* Prevent line breaks */
   white-space: nowrap;
   overflow-x: auto;
   overflow-y: hidden;
-  padding: 1rem 0;
+  
   outline: none;
   caret-color: transparent;
-}
 
-#answer::-webkit-scrollbar {
-  display: none;
+  /* Prevent height jump when expression is present */
+  
+  min-height: 2rem;
+  
 }
 
 #display {
+  grid-area: display;
   display: flex;
-  flex-direction: column; /* Stack text vertically */
-  align-items: flex-end;    /* Push text to the right */
+  flex-direction: column;
+  /* Stack text vertically */
+  align-items: flex-end;
+  /* Push text to the right */
   justify-content: center;
   padding: 10px 20px;
   line-height: 1.2;
@@ -114,12 +132,13 @@
 
 button {
   /* Aspect-ratio keeps buttons circular if width/height are handled by grid */
-  aspect-ratio: 1 / 1; 
+  aspect-ratio: 1 / 1;
   font-size: 2rem;
   font-weight: 350;
   border: none;
   cursor: pointer;
-  border-radius: 100%; /* Perfect circles */
+  border-radius: 100%;
+  /* Perfect circles */
   width: 100%;
   transition: transform 0.1s ease-in-out;
   font-family: 'Inter', sans-serif;
@@ -128,50 +147,188 @@ button {
   justify-content: center;
 }
 
-#calc{
+#calc {
   aspect-ratio: auto;
   grid-area: calc;
 }
-
-
-/* .material-symbols-outlined {
-  width: 5em;
-
-} */
 
 button:active {
   transform: scale(0.92);
 }
 
-.light-gray { background-color: var(--light-gray); }
-.dark-gray { background-color: var(--dark-gray); color: white; }
-.yellow { background-color: var(--yellow); color: white; }
+.light-gray {
+  background-color: var(--light-gray);
+}
+
+.dark-gray {
+  background-color: var(--dark-gray);
+  color: white;
+}
+
+.yellow {
+  background-color: var(--yellow);
+  color: white;
+}
 
 /* Grid Area Assignments */
-#clear { grid-area: clear; }
-#negative { grid-area: negative; }
-#percentage { grid-area: percentage; }
-#divide { grid-area: divide; }
-#seven { grid-area: seven; }
-#eight { grid-area: eight; }
-#nine { grid-area: nine; }
-#multiply { grid-area: multiply; }
-#four { grid-area: four; }
-#five { grid-area: five; }
-#six { grid-area: six; }
-#subtract { grid-area: subtract; }
-#one { grid-area: one; }
-#two { grid-area: two; }
-#three { grid-area: three; }
-#add { grid-area: add; }
-#calculator { grid-area: calc; }
-#zero { grid-area: zero; }
-#decimal { grid-area: decimal; }
-#equals { grid-area: equals; }
+#clear {
+  grid-area: clear;
+}
+
+#negative {
+  grid-area: negative;
+}
+
+#percentage {
+  grid-area: percentage;
+}
+
+#divide {
+  grid-area: divide;
+}
+
+#seven {
+  grid-area: seven;
+}
+
+#eight {
+  grid-area: eight;
+}
+
+#nine {
+  grid-area: nine;
+}
+
+#multiply {
+  grid-area: multiply;
+}
+
+#four {
+  grid-area: four;
+}
+
+#five {
+  grid-area: five;
+}
+
+#six {
+  grid-area: six;
+}
+
+#subtract {
+  grid-area: subtract;
+}
+
+#one {
+  grid-area: one;
+}
+
+#two {
+  grid-area: two;
+}
+
+#three {
+  grid-area: three;
+}
+
+#add {
+  grid-area: add;
+}
+
+#calculator {
+  grid-area: calc;
+}
+
+#zero {
+  grid-area: zero;
+}
+
+#decimal {
+  grid-area: decimal;
+}
+
+#equals {
+  grid-area: equals;
+}
 
 h1 {
   font-family: 'Inter', sans-serif;
   font-weight: 600;
   font-size: clamp(1.5rem, 5vw, 3rem);
   margin-bottom: 2.5rem;
+}
+
+
+/* 1. Necessary for the absolute positioning of the history icon */
+#display {
+  position: relative; 
+}
+
+/* 2. The small history clock icon inside the display screen */
+.history-icon {
+  position: absolute;
+  top: 15px;
+  left: 20px;
+  color: var(--light-gray);
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.history-icon:hover {
+  opacity: 1;
+  color: var(--white);
+}
+
+/* 3. The History Popup List */
+.history-list {
+  position: absolute;
+  /* Centers the list over the calculator */
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  
+  width: 80%;
+  max-height: 60%;
+  
+  /* Glassmorphism / Dark theme style */
+  background-color: rgba(30, 30, 30, 0.95);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border: 1px solid #444;
+  border-radius: 20px;
+  
+  padding: 20px;
+  overflow-y: auto;
+  z-index: 100;
+  box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+  color: white;
+  font-family: 'Inter', sans-serif;
+}
+
+/* 4. Individual History Items */
+.history-item {
+  font-size: 1.1rem;
+  padding: 12px 0;
+  border-bottom: 1px solid #444;
+  text-align: right;
+  color: #ddd;
+}
+
+.history-item:last-child {
+  border-bottom: none;
+}
+
+/* 5. The Close Button (New!) */
+.close-history {
+  margin-top: 20px; /* <--- EQUAL PADDING TOP */
+  background-color: var(--yellow);
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 20px;
+  width: 100%;
+  font-size: 1.2rem;
+  font-weight: bold;
+  aspect-ratio: auto; /* Overrides the 1/1 ratio from general button style */
 }

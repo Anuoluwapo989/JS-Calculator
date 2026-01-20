@@ -6,77 +6,78 @@ import './App.css';
 type OperatorType = '/' | '*' | '-' | '+' | '=' | null;
 
 function App() {
-  // State 1: The full math string (e.g., "50 * 2 + 10")
   const [expression, setExpression] = useState<string>("");
-
-  // State 2: The live answer (e.g., "110")
   const [result, setResult] = useState<string>("0");
-
-  // const [display, setDisplay] = useState<string>("0");
-  // const [result, setResult] = useState<boolean>(false);
-
+  const [history, setHistory] = useState<string[]>([]);
+  const [showHistory, setShowHistory] = useState<boolean>(false);
   const [activeOperator, setActiveOperator] = useState<OperatorType>(null);
+  
+  // NEW STATE: Tracks if we just finished a calculation
+  const [hasCalculated, setHasCalculated] = useState<boolean>(false);
 
-  // Helper function to check if a symbol is an operator
   const isOperator = (symbol: string) => /[*/+-]/.test(symbol);
-  useEffect(() => {
-    if (!expression) {
-      setResult("0");
-      return;
-    }
 
-    try {
-      // Check if the last character is NOT an operator (so we don't solve "50 +")
-      const lastChar = expression.slice(-1);
-      if (!isOperator(lastChar)) {
-        const calculated = evaluate(expression);
-        setResult(String(calculated));
-      }
-    } catch (error) {
-      // If the math is invalid (incomplete), we just ignore it 
-      // and keep the previous valid result on screen.
-    }
-  }, [expression]);
-
-
-  // // NOTE: We wrap calculate in useCallback so it can be used in the useEffect below
-  // const calculate = useCallback(() => {
-  //   try {
-  //     // Evaluate the math expression
-  //     const evaluated = evaluate(display.trim());
-  //     setDisplay(String(evaluated));
-  //     setResult(true);
-  //     setActiveOperator(null);
-  //   } catch (error) {
-  //     setDisplay("Error");
-  //     setResult(true);
-  //     setActiveOperator(null);
-  //   }
-  // }, [display]);
-
-  // NOTE: We wrap buttonPress in useCallback to avoid stale state in event listeners
   const buttonPress = useCallback((symbol: string) => {
     if (symbol === "clear") {
       setExpression("");
       setResult("0");
       setActiveOperator(null);
+      setHasCalculated(false);
     }
     else if (symbol === "=") {
-      // FINAL COMMIT: Replace the expression with the calculated result
-      setExpression(result);
-      setActiveOperator(null);
+      if (!expression) return;
+      
+      try {
+        // 1. Calculate
+        const finalResult = evaluate(expression); 
+        
+        // 2. History: Save FULL string (Equation = Answer)
+        const historyItem = `${expression} = ${finalResult}`;
+        setHistory(prev => [historyItem, ...prev]);
+        
+        // 3. Display: Show result
+        setResult(String(finalResult)); 
+        setExpression(String(finalResult)); 
+        setActiveOperator(null);
+
+        // 4. Set Flag: We just finished a calculation
+        setHasCalculated(true); 
+
+      } catch (error) {
+        setResult("Error");
+      }
+    }
+    else if (symbol === "history") {
+        setShowHistory(!showHistory);
+    }
+    else if (symbol === "percent") {
+      try {
+        const percentValue = evaluate(expression + " / 100");
+        setExpression(String(percentValue));
+      } catch (error) {
+        setResult("Error");
+      }
+    }
+    else if (symbol === "calc") {
+      if (!expression) return;
+      try {
+        const finalResult = evaluate(expression); 
+        setResult(String(finalResult)); 
+        setExpression(String(finalResult)); 
+        setActiveOperator(null);
+        setHasCalculated(true); // Treat this like =
+      } catch (error) {
+        setResult("Error");
+      }
     }
     else if (symbol === "negative") {
-      // Simple logic to toggle negative at the start
       if (expression === "") setExpression("-");
       else setExpression(prev => prev + "-");
     }
     else if (isOperator(symbol)) {
+      setHasCalculated(false); // If user hits +, -, *, / we continue using the answer
       const lastChar = expression.slice(-1);
-
-      // If user typed an operator, prevent duplicates (e.g. "50++")
       if (isOperator(lastChar)) {
-        // Replace the old operator with the new one
         setExpression(prev => prev.slice(0, -1) + symbol);
       } else {
         setExpression(prev => prev + symbol);
@@ -84,18 +85,22 @@ function App() {
       setActiveOperator(symbol as OperatorType);
     }
     else {
-      // It's a number/decimal
-      setExpression(prev => prev + symbol);
+      // --- NUMBER LOGIC ---
+      if (hasCalculated) {
+        // If we just solved something and type a number, START NEW
+        setExpression(symbol);
+        setHasCalculated(false);
+      } else {
+        // Otherwise, append normally
+        setExpression(prev => prev + symbol);
+      }
       setActiveOperator(null);
     }
-  }, [expression, result]);
+  }, [expression, showHistory, activeOperator, hasCalculated]);
 
-  // GLOBAL KEYBOARD LISTENER
-  // We attach this to the window instead of the div. 
-  // This allows desktop typing without needing to "focus" the display.
+  // Keyboard Handler
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      const allowed = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight'];
       if (e.key === 'Enter') {
         e.preventDefault();
         buttonPress("=");
@@ -118,17 +123,41 @@ function App() {
       <h1>Calculator Web App</h1>
       <div id="calculator">
 
-        {/* NEW DUAL DISPLAY */}
         <div id="display">
-          {/* Top: The Formula */}
+          {/* TOP LINE: Parse the history string to show ONLY the equation */}
           <div className="expression-text">
-            {expression}
+            {history.length > 0 
+              ? history[0].split('=')[0] // Takes the part BEFORE the equals sign
+              : '\u00A0'}
           </div>
-          {/* Bottom: The Live Answer */}
+          
           <div className="result-text">
-            {result}
+            {expression || "0"}
+          </div>
+
+          <div 
+             onClick={() => setShowHistory(!showHistory)} 
+             className="history-icon"
+             title="View History"
+          >
+             <span className="material-symbols-outlined">history</span>
           </div>
         </div>
+
+        {showHistory && (
+            <div className="history-list">
+                <div style={{display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:'10px'}}>
+                   <h3>History</h3>
+                </div>
+                {history.length === 0 && <p>No calculations yet.</p>}
+                {history.map((item, index) => (
+                    <div key={index} className="history-item">{item}</div>
+                ))}
+                <button className="close-history" onClick={() => setShowHistory(false)}>Close</button>
+            </div>
+        )}
+
+        {/* BUTTONS */}
         <button id="clear" onClick={() => buttonPress("clear")} className="light-gray">C</button>
         <button id="negative" onClick={() => buttonPress("negative")} className="light-gray">+/-</button>
         <button id="percentage" onClick={() => buttonPress("percent")} className="light-gray">%</button>
@@ -152,6 +181,7 @@ function App() {
         <button id="calc" onClick={() => buttonPress("calc")} className="dark-gray">
           <span className="material-symbols-outlined">calculate</span>
         </button>
+
         <button id="zero" onClick={() => buttonPress("0")} className="dark-gray">0</button>
         <button id="decimal" onClick={() => buttonPress(".")} className="dark-gray">.</button>
         <button id="equals" onClick={() => buttonPress("=")} className="yellow">=</button>
