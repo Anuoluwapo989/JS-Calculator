@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { evaluate } from 'mathjs';
 import './App.css';
 
@@ -13,13 +13,12 @@ function App() {
   const [activeOperator, setActiveOperator] = useState<OperatorType>(null);
   
   const [hasCalculated, setHasCalculated] = useState<boolean>(false);
-  
-  // NEW STATE: Tracks if the calculation was just a simple number (e.g. "5" or "5.5")
   const [lastCalcWasSimple, setLastCalcWasSimple] = useState<boolean>(false);
+  
+  // NEW: Reference to the display text element for auto-scrolling
+  const displayRef = useRef<HTMLDivElement>(null);
 
   const isOperator = (symbol: string) => /[*/+-]/.test(symbol);
-  
-  // Helper to detect simple numbers
   const isSimpleNumber = (str: string) => /^-?\d*\.?\d*$/.test(str);
 
   const buttonPress = useCallback((symbol: string) => {
@@ -36,11 +35,9 @@ function App() {
       try {
         const finalResult = evaluate(expression); 
         
-        // CHECK: Is it a simple number?
         const isSimple = isSimpleNumber(expression);
         setLastCalcWasSimple(isSimple);
 
-        // ONLY save to history if it's complex (not simple)
         if (!isSimple) {
             const historyItem = `${expression} = ${finalResult}`;
             setHistory(prev => [historyItem, ...prev]);
@@ -74,7 +71,7 @@ function App() {
         setExpression(String(finalResult)); 
         setActiveOperator(null);
         setHasCalculated(true); 
-        setLastCalcWasSimple(true); // Treat calc button as simple update
+        setLastCalcWasSimple(true); 
       } catch (error) {
         setResult("Error");
       }
@@ -85,8 +82,8 @@ function App() {
     }
     else if (isOperator(symbol)) {
       setHasCalculated(false);
-      setLastCalcWasSimple(false);
-      
+      setLastCalcWasSimple(false); 
+
       const lastChar = expression.slice(-1);
       const secondLastChar = expression.slice(-2, -1);
 
@@ -107,13 +104,11 @@ function App() {
       setActiveOperator(symbol as OperatorType);
     }
     else {
-      // NUMBER LOGIC
       if (hasCalculated) {
         setExpression(symbol);
         setHasCalculated(false);
-        setLastCalcWasSimple(false);
+        setLastCalcWasSimple(false); 
       } else {
-        // Decimal & Zero Logic
         if (symbol === ".") {
              const segments = expression.split(/[*/+-]/);
              const currentSegment = segments[segments.length - 1];
@@ -124,7 +119,6 @@ function App() {
              const currentSegment = segments[segments.length - 1];
              if (currentSegment === "0") return;
         }
-
         setExpression(prev => prev + symbol);
       }
       setActiveOperator(null);
@@ -147,23 +141,30 @@ function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [buttonPress]);
 
+  // NEW: Auto-scroll Logic
+  // This runs every time 'expression' changes.
+  useEffect(() => {
+    if (displayRef.current) {
+      // Set the scroll position to the maximum width (all the way to the right)
+      displayRef.current.scrollLeft = displayRef.current.scrollWidth;
+    }
+  }, [expression]);
+
   return (
     <div className="container">
       <h1>Calculator Web App</h1>
       <div id="calculator">
 
-        {/* CONTAINER: Uses CLASS now, not ID */}
         <div className="display-container">
           
           <div className="expression-text">
-            {/* Show invisible char if history is empty OR last calc was simple */}
             {history.length > 0 && !lastCalcWasSimple
               ? history[0].split('=')[0] 
               : '\u00A0'}
           </div>
           
-          {/* TEXT: Uses ID="display" (Fixes Styling + Tests) */}
-          <div id="display" className="result-text">
+          {/* Attached ref={displayRef} here */}
+          <div id="display" className="result-text" ref={displayRef}>
             {expression || "0"}
           </div>
 
@@ -189,6 +190,7 @@ function App() {
             </div>
         )}
 
+        {/* BUTTONS */}
         <button id="clear" onClick={() => buttonPress("clear")} className="light-gray">C</button>
         <button id="negative" onClick={() => buttonPress("negative")} className="light-gray">+/-</button>
         <button id="percentage" onClick={() => buttonPress("percent")} className="light-gray">%</button>
