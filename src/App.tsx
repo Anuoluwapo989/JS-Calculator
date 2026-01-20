@@ -12,10 +12,15 @@ function App() {
   const [showHistory, setShowHistory] = useState<boolean>(false);
   const [activeOperator, setActiveOperator] = useState<OperatorType>(null);
   
-  // NEW STATE: Tracks if we just finished a calculation
   const [hasCalculated, setHasCalculated] = useState<boolean>(false);
+  
+  // NEW STATE: Tracks if the calculation was just a simple number (e.g. "5" or "5.5")
+  const [lastCalcWasSimple, setLastCalcWasSimple] = useState<boolean>(false);
 
   const isOperator = (symbol: string) => /[*/+-]/.test(symbol);
+  
+  // Helper to detect simple numbers
+  const isSimpleNumber = (str: string) => /^-?\d*\.?\d*$/.test(str);
 
   const buttonPress = useCallback((symbol: string) => {
     if (symbol === "clear") {
@@ -23,24 +28,27 @@ function App() {
       setResult("0");
       setActiveOperator(null);
       setHasCalculated(false);
+      setLastCalcWasSimple(false);
     }
     else if (symbol === "=") {
       if (!expression) return;
       
       try {
-        // 1. Calculate
         const finalResult = evaluate(expression); 
         
-        // 2. History: Save FULL string (Equation = Answer)
-        const historyItem = `${expression} = ${finalResult}`;
-        setHistory(prev => [historyItem, ...prev]);
+        // CHECK: Is it a simple number?
+        const isSimple = isSimpleNumber(expression);
+        setLastCalcWasSimple(isSimple);
+
+        // ONLY save to history if it's complex (not simple)
+        if (!isSimple) {
+            const historyItem = `${expression} = ${finalResult}`;
+            setHistory(prev => [historyItem, ...prev]);
+        }
         
-        // 3. Display: Show result
         setResult(String(finalResult)); 
         setExpression(String(finalResult)); 
         setActiveOperator(null);
-
-        // 4. Set Flag: We just finished a calculation
         setHasCalculated(true); 
 
       } catch (error) {
@@ -65,7 +73,8 @@ function App() {
         setResult(String(finalResult)); 
         setExpression(String(finalResult)); 
         setActiveOperator(null);
-        setHasCalculated(true); // Treat this like =
+        setHasCalculated(true); 
+        setLastCalcWasSimple(true); // Treat calc button as simple update
       } catch (error) {
         setResult("Error");
       }
@@ -75,23 +84,47 @@ function App() {
       else setExpression(prev => prev + "-");
     }
     else if (isOperator(symbol)) {
-      setHasCalculated(false); // If user hits +, -, *, / we continue using the answer
+      setHasCalculated(false);
+      setLastCalcWasSimple(false);
+      
       const lastChar = expression.slice(-1);
+      const secondLastChar = expression.slice(-2, -1);
+
       if (isOperator(lastChar)) {
-        setExpression(prev => prev.slice(0, -1) + symbol);
+        if (symbol === "-" && lastChar !== "-") {
+            setExpression(prev => prev + symbol);
+        }
+        else if (symbol !== "-") {
+            if (isOperator(secondLastChar)) {
+                setExpression(prev => prev.slice(0, -2) + symbol);
+            } else {
+                setExpression(prev => prev.slice(0, -1) + symbol);
+            }
+        }
       } else {
         setExpression(prev => prev + symbol);
       }
       setActiveOperator(symbol as OperatorType);
     }
     else {
-      // --- NUMBER LOGIC ---
+      // NUMBER LOGIC
       if (hasCalculated) {
-        // If we just solved something and type a number, START NEW
         setExpression(symbol);
         setHasCalculated(false);
+        setLastCalcWasSimple(false);
       } else {
-        // Otherwise, append normally
+        // Decimal & Zero Logic
+        if (symbol === ".") {
+             const segments = expression.split(/[*/+-]/);
+             const currentSegment = segments[segments.length - 1];
+             if (currentSegment.includes(".")) return;
+        }
+        if (symbol === "0") {
+             const segments = expression.split(/[*/+-]/);
+             const currentSegment = segments[segments.length - 1];
+             if (currentSegment === "0") return;
+        }
+
         setExpression(prev => prev + symbol);
       }
       setActiveOperator(null);
@@ -101,13 +134,9 @@ function App() {
   // Keyboard Handler
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        buttonPress("=");
-      } else if (e.key === 'Escape') {
-        e.preventDefault();
-        buttonPress("clear");
-      } else if (e.key === 'Backspace') {
+      if (e.key === 'Enter') { e.preventDefault(); buttonPress("="); }
+      else if (e.key === 'Escape') { e.preventDefault(); buttonPress("clear"); }
+      else if (e.key === 'Backspace') {
         setExpression(prev => prev.slice(0, -1));
       } else if (/^[0-9.+\-*/]$/.test(e.key)) {
         e.preventDefault();
@@ -123,15 +152,18 @@ function App() {
       <h1>Calculator Web App</h1>
       <div id="calculator">
 
-        <div id="display">
-          {/* TOP LINE: Parse the history string to show ONLY the equation */}
+        {/* CONTAINER: Uses CLASS now, not ID */}
+        <div className="display-container">
+          
           <div className="expression-text">
-            {history.length > 0 
-              ? history[0].split('=')[0] // Takes the part BEFORE the equals sign
+            {/* Show invisible char if history is empty OR last calc was simple */}
+            {history.length > 0 && !lastCalcWasSimple
+              ? history[0].split('=')[0] 
               : '\u00A0'}
           </div>
           
-          <div className="result-text">
+          {/* TEXT: Uses ID="display" (Fixes Styling + Tests) */}
+          <div id="display" className="result-text">
             {expression || "0"}
           </div>
 
@@ -157,7 +189,6 @@ function App() {
             </div>
         )}
 
-        {/* BUTTONS */}
         <button id="clear" onClick={() => buttonPress("clear")} className="light-gray">C</button>
         <button id="negative" onClick={() => buttonPress("negative")} className="light-gray">+/-</button>
         <button id="percentage" onClick={() => buttonPress("percent")} className="light-gray">%</button>

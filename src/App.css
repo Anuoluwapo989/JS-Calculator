@@ -26,8 +26,10 @@
   --yellow: #ff9f0b;
 }
 
-/* App.css */
-#display {
+/* RENAMED FROM #display TO .display-container */
+/* This restores the layout styling to the container */
+.display-container {
+  grid-area: display;
   display: flex;
   flex-direction: column;
   /* Stack text vertically */
@@ -36,6 +38,7 @@
   justify-content: center;
   padding: 10px 20px;
   line-height: 1.2;
+  position: relative; /* Necessary for history icon positioning */
 }
 
 .container {
@@ -113,21 +116,7 @@
   caret-color: transparent;
 
   /* Prevent height jump when expression is present */
-  
   min-height: 2rem;
-  
-}
-
-#display {
-  grid-area: display;
-  display: flex;
-  flex-direction: column;
-  /* Stack text vertically */
-  align-items: flex-end;
-  /* Push text to the right */
-  justify-content: center;
-  padding: 10px 20px;
-  line-height: 1.2;
 }
 
 button {
@@ -171,85 +160,26 @@ button:active {
 }
 
 /* Grid Area Assignments */
-#clear {
-  grid-area: clear;
-}
-
-#negative {
-  grid-area: negative;
-}
-
-#percentage {
-  grid-area: percentage;
-}
-
-#divide {
-  grid-area: divide;
-}
-
-#seven {
-  grid-area: seven;
-}
-
-#eight {
-  grid-area: eight;
-}
-
-#nine {
-  grid-area: nine;
-}
-
-#multiply {
-  grid-area: multiply;
-}
-
-#four {
-  grid-area: four;
-}
-
-#five {
-  grid-area: five;
-}
-
-#six {
-  grid-area: six;
-}
-
-#subtract {
-  grid-area: subtract;
-}
-
-#one {
-  grid-area: one;
-}
-
-#two {
-  grid-area: two;
-}
-
-#three {
-  grid-area: three;
-}
-
-#add {
-  grid-area: add;
-}
-
-#calculator {
-  grid-area: calc;
-}
-
-#zero {
-  grid-area: zero;
-}
-
-#decimal {
-  grid-area: decimal;
-}
-
-#equals {
-  grid-area: equals;
-}
+#clear { grid-area: clear; }
+#negative { grid-area: negative; }
+#percentage { grid-area: percentage; }
+#divide { grid-area: divide; }
+#seven { grid-area: seven; }
+#eight { grid-area: eight; }
+#nine { grid-area: nine; }
+#multiply { grid-area: multiply; }
+#four { grid-area: four; }
+#five { grid-area: five; }
+#six { grid-area: six; }
+#subtract { grid-area: subtract; }
+#one { grid-area: one; }
+#two { grid-area: two; }
+#three { grid-area: three; }
+#add { grid-area: add; }
+#calculator { grid-area: calc; }
+#zero { grid-area: zero; }
+#decimal { grid-area: decimal; }
+#equals { grid-area: equals; }
 
 h1 {
   font-family: 'Inter', sans-serif;
@@ -258,9 +188,8 @@ h1 {
   margin-bottom: 2.5rem;
 }
 
-
 /* 1. Necessary for the absolute positioning of the history icon */
-#display {
+.display-container {
   position: relative; 
 }
 
@@ -319,9 +248,9 @@ h1 {
   border-bottom: none;
 }
 
-/* 5. The Close Button (New!) */
+/* 5. The Close Button */
 .close-history {
-  margin-top: 20px; /* <--- EQUAL PADDING TOP */
+  margin-top: 20px;
   background-color: var(--yellow);
   color: white;
   border: none;
@@ -330,5 +259,5 @@ h1 {
   width: 100%;
   font-size: 1.2rem;
   font-weight: bold;
-  aspect-ratio: auto; /* Overrides the 1/1 ratio from general button style */
+  aspect-ratio: auto;
 }
