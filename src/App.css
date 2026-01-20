@@ -36,7 +36,9 @@
   align-items: flex-end;
   /* Push text to the right */
   justify-content: center;
-  padding: 10px 20px;
+  padding:  0.3rem;
+  padding-top:  1rem;
+  padding-left:  1rem;
   line-height: 1.2;
   position: relative; /* Necessary for history icon positioning */
 }
