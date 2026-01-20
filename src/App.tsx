@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { evaluate } from 'mathjs';
+import { Analytics } from '@vercel/analytics/react';
 import './App.css';
 
 // Type definition for the currently selected operator
@@ -162,6 +163,7 @@ function App() {
 
   return (
     <div className="container">
+      <Analytics />
       <h1>Calculator Web App</h1>
       <div id="calculator">
 
