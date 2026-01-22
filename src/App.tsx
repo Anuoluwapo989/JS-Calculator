@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { evaluate } from 'mathjs';
+// 1. Added 'format' to imports
+import { evaluate, format } from 'mathjs';
 import './App.css';
 
 // Type definition for the currently selected operator
@@ -36,21 +37,25 @@ function App() {
       
       try {
         // 1. Calculate
-        // mathjs handles "50%" automatically as 0.5
         const finalResult = evaluate(expression); 
         
-        // 2. Check if simple
+        // 2. Format Result (Limit decimals)
+        // This ensures numbers fit in the box (e.g. 5.622222222)
+        const formattedResult = format(finalResult, { precision: 10 });
+
+        // 3. Check if simple
         const isSimple = isSimpleNumber(expression);
         setLastCalcWasSimple(isSimple);
 
-        // 3. History: Save if NOT simple (e.g. "50 + 5" or "50%")
+        // 4. History: Save if NOT simple
         if (!isSimple) {
-            const historyItem = `${expression} = ${finalResult}`;
+            // Use formattedResult in history so it looks clean
+            const historyItem = `${expression} = ${formattedResult}`;
             setHistory(prev => [historyItem, ...prev]);
         }
         
-        setResult(String(finalResult)); 
-        setExpression(String(finalResult)); 
+        setResult(formattedResult); 
+        setExpression(formattedResult); 
         setActiveOperator(null);
         setHasCalculated(true); 
 
@@ -74,8 +79,12 @@ function App() {
       if (!expression) return;
       try {
         const finalResult = evaluate(expression); 
-        setResult(String(finalResult)); 
-        setExpression(String(finalResult)); 
+
+        // Format Result here too
+        const formattedResult = format(finalResult, { precision: 10 });
+
+        setResult(formattedResult); 
+        setExpression(formattedResult); 
         setActiveOperator(null);
         setHasCalculated(true); 
         setLastCalcWasSimple(true); 
