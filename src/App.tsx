@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 // 1. Added 'format' to imports
 import { evaluate, format } from 'mathjs';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import './App.css';
 
 // Type definition for the currently selected operator
@@ -170,9 +171,10 @@ function App() {
   }, [expression]);
 
   return (
-    <div className="container">
-      <h1>Calculator Web App</h1>
-      <div id="calculator">
+    <>
+      <div className="container">
+        <h1>Calculator Web App</h1>
+        <div id="calculator">
 
         <div className="display-container">
           
@@ -239,6 +241,8 @@ function App() {
         <button id="equals" onClick={() => buttonPress("=")} className="yellow">=</button>
       </div>
     </div>
+    <SpeedInsights />
+  </>
   );
 }
 
