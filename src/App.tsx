@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 // 1. Added 'format' to imports
 import { evaluate, format } from 'mathjs';
+import { SpeedInsights } from '@vercel/speed-insights/react';
 import './App.css';
 
 // Type definition for the currently selected operator
@@ -172,6 +173,7 @@ function App() {
   return (
     <div className="container">
       <h1>Calculator Web App</h1>
+      <SpeedInsights />
       <div id="calculator">
 
         <div className="display-container">
